@@ -1,0 +1,10 @@
+[package]
+name = "procsearch"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+libbpf-rs = "0.24.8"
+
+[build-dependencies]
+libbpf-cargo = "0.24.8"
