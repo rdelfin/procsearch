@@ -2,7 +2,7 @@
 #ifndef __PROCEXEC_H
 #define __PROCEXEC_H
 
-#define TASK_COMM_LEN 16
+#define TASK_COMM_LEN 256
 
 struct exec_event {
   pid_t pid;

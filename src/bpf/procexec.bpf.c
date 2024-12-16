@@ -23,6 +23,17 @@ struct {
 	__uint(max_entries, 256 * 1024);
 } rb SEC(".maps");
 
+// format:
+//        field:unsigned short common_type;       offset:0;       size:2; signed:0;
+//        field:unsigned char common_flags;       offset:2;       size:1; signed:0;
+//        field:unsigned char common_preempt_count;       offset:3;       size:1; signed:0;
+//        field:int common_pid;   offset:4;       size:4; signed:1;
+// 
+//        field:int __syscall_nr; offset:8;       size:4; signed:1;
+//        field:const char * filename;    offset:16;      size:8; signed:0;
+//        field:const char *const * argv; offset:24;      size:8; signed:0;
+//        field:const char *const * envp; offset:32;      size:8; signed:0;
+
 SEC("tp/syscalls/sys_enter_execve")
 int handle__syscall_enter_execve(struct trace_event_raw_sys_enter *ctx)
 {
@@ -36,10 +47,8 @@ int handle__syscall_enter_execve(struct trace_event_raw_sys_enter *ctx)
   uint64_t pid_tgid = bpf_get_current_pid_tgid();
   pid_t pid = (pid_t)(pid_tgid & 0xFFFFFFFF);
   event->pid = pid;
-  event->task[0] = 'a';
-  event->task[1] = 'b';
-  event->task[2] = 'c';
-  event->task[3] = 0;
+  
+  bpf_probe_read_str(&event->task, sizeof(event->task), (void*)ctx->args[0]);
   // Submit the reserved data
   bpf_ringbuf_submit(event, 0);
 }
