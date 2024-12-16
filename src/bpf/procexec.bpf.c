@@ -33,7 +33,9 @@ int handle__syscall_enter_execve(struct trace_event_raw_sys_enter *ctx)
     return 1;
   }
 
-  event->pid = 10;
+  uint64_t pid_tgid = bpf_get_current_pid_tgid();
+  pid_t pid = (pid_t)(pid_tgid & 0xFFFFFFFF);
+  event->pid = pid;
   event->task[0] = 'a';
   event->task[1] = 'b';
   event->task[2] = 'c';

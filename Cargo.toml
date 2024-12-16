@@ -6,6 +6,8 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.94"
 libbpf-rs = "0.24.8"
+log = "0.4.22"
+simple_logger = "5.0.0"
 
 [build-dependencies]
 libbpf-cargo = "0.24.8"

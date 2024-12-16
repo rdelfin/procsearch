@@ -9,6 +9,7 @@ mod procexec_bpf {
 }
 
 fn main() -> anyhow::Result<()> {
+    simple_logger::init()?;
     println!("Setting up eBPF program...");
 
     let builder = ProcexecSkelBuilder::default();
@@ -41,12 +42,12 @@ fn exec_events_handler(data: &[u8]) -> i32 {
     let event = unsafe { &*(data.as_ptr() as *const Event) };
 
     let task = std::str::from_utf8(&event.task).unwrap_or("<unknown>");
-    println!("task: {task}; pid={}", event.pid);
+    log::info!("task: {task}; pid={}", event.pid);
     0
 }
 
 #[repr(C)]
 struct Event {
-    pid: i32,
+    pid: u32,
     task: [u8; 16],
 }
