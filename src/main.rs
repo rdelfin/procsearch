@@ -1,6 +1,7 @@
 use libbpf_rs::skel::{OpenSkel, Skel, SkelBuilder};
 use libbpf_rs::RingBufferBuilder;
 use procexec_bpf::ProcexecSkelBuilder;
+use std::ffi::CStr;
 use std::mem::MaybeUninit;
 use std::time::Duration;
 
@@ -40,9 +41,26 @@ fn exec_events_handler(data: &[u8]) -> i32 {
     }
 
     let event = unsafe { &*(data.as_ptr() as *const Event) };
+    let task = CStr::from_bytes_until_nul(&event.task)
+        .ok()
+        .and_then(|s| s.to_str().ok())
+        .unwrap_or("<unknown>");
 
-    let task = std::str::from_utf8(&event.task).unwrap_or("<unknown>");
-    log::info!("task: {task}; pid={}", event.pid);
+    let mut args = vec![];
+    for arg in event.args {
+        if arg[0] == 0 {
+            break;
+        }
+        let c_str = CStr::from_bytes_until_nul(&arg)
+            .ok()
+            .and_then(|s| s.to_str().ok());
+        if let Some(arg) = c_str {
+            args.push(arg.to_string());
+        } else {
+            break;
+        }
+    }
+    log::info!("task: {task}; pid={}; args={args:?}", event.pid);
     0
 }
 
