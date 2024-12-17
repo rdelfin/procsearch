@@ -50,4 +50,5 @@ fn exec_events_handler(data: &[u8]) -> i32 {
 struct Event {
     pid: u32,
     task: [u8; 256],
+    args: [[u8; 256]; 16],
 }

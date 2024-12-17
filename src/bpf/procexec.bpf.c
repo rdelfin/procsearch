@@ -6,10 +6,6 @@
 
 char LICENSE[] SEC("license") = "Dual BSD/GPL";
 
-const volatile __u64 min_us = 0;
-const volatile pid_t targ_pid = 0;
-const volatile pid_t targ_tgid = 0;
-
 // Dummy instance to get skeleton to generate definition for `struct event`
 struct exec_event _exec_event = {0};
 
@@ -20,7 +16,7 @@ struct task_struct___pre_5_14 {
 
 struct {
 	__uint(type, BPF_MAP_TYPE_RINGBUF);
-	__uint(max_entries, 256 * 1024);
+	__uint(max_entries, 20 * sizeof(struct exec_event));
 } rb SEC(".maps");
 
 // format:
@@ -49,6 +45,13 @@ int handle__syscall_enter_execve(struct trace_event_raw_sys_enter *ctx)
   event->pid = pid;
   
   bpf_probe_read_str(&event->task, sizeof(event->task), (void*)ctx->args[0]);
+  for (size_t i = 0; i < NUM_ARGS; i++) {
+    const char* const* argv = (const char* const*)ctx->args[1];
+    if (argv[i] == NULL) {
+      break;
+    }
+    bpf_probe_read_str(&event->args[i], sizeof(event->args[i]), (void*)argv[i]);
+  }
   // Submit the reserved data
   bpf_ringbuf_submit(event, 0);
 }

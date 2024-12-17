@@ -22,8 +22,8 @@ fn main() {
         ])
         .build_and_generate(&out)
         .unwrap();
-    println!("cargo:rerun-if-changed={SRC}");
-    for direntry in std::fs::read_dir("src/bpf").unwrap() {
+    println!("cargo:rerun-if-changed={SRC_DIR}/{SRC}");
+    for direntry in std::fs::read_dir(SRC_DIR).unwrap() {
         let direntry = direntry.unwrap();
         let path = direntry.path();
         if path.extension() == Some(OsStr::new("h")) {
