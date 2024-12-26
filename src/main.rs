@@ -46,20 +46,14 @@ fn exec_events_handler(data: &[u8]) -> i32 {
         .and_then(|s| s.to_str().ok())
         .unwrap_or("<unknown>");
 
-    let mut args = vec![];
-    for arg in event.args {
-        if arg[0] == 0 {
-            break;
-        }
-        let c_str = CStr::from_bytes_until_nul(&arg)
-            .ok()
-            .and_then(|s| s.to_str().ok());
-        if let Some(arg) = c_str {
-            args.push(arg.to_string());
-        } else {
-            break;
-        }
-    }
+    let args = event.args[..event.num_args]
+        .into_iter()
+        .filter_map(|arg| {
+            CStr::from_bytes_until_nul(&arg[..])
+                .ok()
+                .and_then(|s| s.to_str().ok())
+        })
+        .collect::<Vec<_>>();
     log::info!("task: {task}; pid={}; args={args:?}", event.pid);
     0
 }
@@ -67,6 +61,8 @@ fn exec_events_handler(data: &[u8]) -> i32 {
 #[repr(C)]
 struct Event {
     pid: u32,
-    task: [u8; 256],
-    args: [[u8; 256]; 16],
+    time_ns: u64,
+    num_args: usize,
+    task: [u8; 16],
+    args: [[u8; 16]; 16],
 }

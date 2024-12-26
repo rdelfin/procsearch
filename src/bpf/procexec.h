@@ -2,12 +2,14 @@
 #ifndef __PROCEXEC_H
 #define __PROCEXEC_H
 
-#define TASK_COMM_LEN 256
-#define ARG_LEN 256
+#define TASK_COMM_LEN 16
+#define ARG_LEN 16
 #define NUM_ARGS 16
 
 struct exec_event {
   pid_t pid;
+  u64 time_ns;
+  size_t num_args;
 	u8 task[TASK_COMM_LEN];
 	u8 args[NUM_ARGS][ARG_LEN];
 };
