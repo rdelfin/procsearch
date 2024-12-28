@@ -1,5 +1,6 @@
 use libbpf_rs::skel::{OpenSkel, Skel, SkelBuilder};
 use libbpf_rs::RingBufferBuilder;
+use log::info;
 use procexec_bpf::ProcexecSkelBuilder;
 use std::ffi::CStr;
 use std::mem::MaybeUninit;
@@ -11,7 +12,7 @@ mod procexec_bpf {
 
 fn main() -> anyhow::Result<()> {
     simple_logger::init()?;
-    println!("Setting up eBPF program...");
+    info!("Setting up eBPF program...");
 
     let builder = ProcexecSkelBuilder::default();
     let mut open_object = MaybeUninit::uninit();
@@ -24,7 +25,7 @@ fn main() -> anyhow::Result<()> {
     let ring_buffer = rb_builder.build()?;
 
     skel.attach()?;
-    println!("Tracing execve events");
+    info!("Tracing execve events");
 
     while ring_buffer.poll(Duration::MAX).is_ok() {}
     Ok(())
@@ -60,7 +61,7 @@ fn exec_events_handler(data: &[u8]) -> i32 {
             break;
         }
     }
-    log::info!("task: {task}; pid={}; args={args:?}", event.pid);
+    info!("task: {task}; pid={}; args={args:?}", event.pid);
     0
 }
 
