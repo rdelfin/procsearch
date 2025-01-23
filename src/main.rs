@@ -10,6 +10,10 @@ mod procexec_bpf {
     include!(concat!(env!("OUT_DIR"), "/procexec.skel.rs"));
 }
 
+mod protos {
+    tonic::include_proto!("procsearch");
+}
+
 fn main() -> anyhow::Result<()> {
     simple_logger::init()?;
     info!("Setting up eBPF program...");

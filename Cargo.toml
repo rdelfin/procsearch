@@ -7,8 +7,12 @@ edition = "2021"
 anyhow = "1.0.94"
 libbpf-rs = "0.24.8"
 log = "0.4.22"
+prost = "0.13.4"
 simple_logger = "5.0.0"
+tokio = { version = "1.43.0", features = ["full"] }
+tonic = "0.12.3"
 
 [build-dependencies]
 libbpf-cargo = "0.24.8"
+tonic-build = "0.12.3"
 vmlinux = { version = "0.0", git = "https://github.com/libbpf/vmlinux.h.git", rev = "83a228cf37fc65f2d14e4896a04922b5ee531a94" }

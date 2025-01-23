@@ -4,10 +4,21 @@ use std::path::PathBuf;
 
 use libbpf_cargo::SkeletonBuilder;
 
-const SRC_DIR: &str = "src/bpf";
-const SRC: &str = "procexec.bpf.c";
+const EBPF_SRC_DIR: &str = "src/bpf";
+const EBPF_SRC: &str = "procexec.bpf.c";
 
 fn main() {
+    ebpf_build_script();
+    tonic_build_script();
+}
+
+fn tonic_build_script() {
+    let proto_path = PathBuf::from("protos/procsearch.proto");
+    tonic_build::compile_protos(&proto_path).unwrap();
+    println!("cargo:rerun-if-changed={}", proto_path.display());
+}
+
+fn ebpf_build_script() {
     let out = PathBuf::from(env::var_os("OUT_DIR").expect("OUT_DIR must be set in build script"))
         .join("procexec.skel.rs");
 
@@ -15,15 +26,15 @@ fn main() {
         .expect("CARGO_CFG_TARGET_ARCH must be set in build script");
 
     SkeletonBuilder::new()
-        .source(format!("{SRC_DIR}/{SRC}"))
+        .source(format!("{EBPF_SRC_DIR}/{EBPF_SRC}"))
         .clang_args([
             OsStr::new("-I"),
             vmlinux::include_path_root().join(arch).as_os_str(),
         ])
         .build_and_generate(&out)
         .unwrap();
-    println!("cargo:rerun-if-changed={SRC_DIR}/{SRC}");
-    for direntry in std::fs::read_dir(SRC_DIR).unwrap() {
+    println!("cargo:rerun-if-changed={EBPF_SRC_DIR}/{EBPF_SRC}");
+    for direntry in std::fs::read_dir(EBPF_SRC_DIR).unwrap() {
         let direntry = direntry.unwrap();
         let path = direntry.path();
         if path.extension() == Some(OsStr::new("h")) {
