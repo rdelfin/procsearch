@@ -1,3 +1,5 @@
+use crate::protos::proc_search_service_server::{ProcSearchService, ProcSearchServiceServer};
+use crate::protos::{ProcInfoRequest, ProcInfoResponse};
 use libbpf_rs::skel::{OpenSkel, Skel, SkelBuilder};
 use libbpf_rs::RingBufferBuilder;
 use log::info;
@@ -5,6 +7,8 @@ use procexec_bpf::ProcexecSkelBuilder;
 use std::ffi::CStr;
 use std::mem::MaybeUninit;
 use std::time::Duration;
+use tonic::transport::Server;
+use tonic::{Request, Response, Status};
 
 mod procexec_bpf {
     include!(concat!(env!("OUT_DIR"), "/procexec.skel.rs"));
@@ -14,8 +18,16 @@ mod protos {
     tonic::include_proto!("procsearch");
 }
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     simple_logger::init()?;
+
+    let searcher = ProcSearcher::default();
+    Server::builder()
+        .add_service(ProcSearchServiceServer::new(searcher))
+        .serve("127.0.0.1:50051".parse()?)
+        .await?;
+
     info!("Setting up eBPF program...");
 
     let builder = ProcexecSkelBuilder::default();
@@ -33,6 +45,23 @@ fn main() -> anyhow::Result<()> {
 
     while ring_buffer.poll(Duration::MAX).is_ok() {}
     Ok(())
+}
+
+#[derive(Default)]
+pub struct ProcSearcher {}
+
+#[tonic::async_trait]
+impl ProcSearchService for ProcSearcher {
+    async fn proc_info(
+        &self,
+        _request: Request<ProcInfoRequest>,
+    ) -> Result<Response<ProcInfoResponse>, Status> {
+        Ok(Response::new(ProcInfoResponse {
+            pid: 42,
+            command: "".into(),
+            args: vec![],
+        }))
+    }
 }
 
 fn exec_events_handler(data: &[u8]) -> i32 {
